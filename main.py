@@ -1,23 +1,40 @@
-import pygame, sys
-from pygame.locals import *
+import pygame, random
 
-def main():
-    pygame.init()
+screen = pygame.display.set_mode((800,600))
 
-    DISPLAY=pygame.display.set_mode((500,400),0,32)
+draw_on = False
+last_pos = (0, 0)
+color = (255, 128, 0)
+radius = 10
 
-    WHITE=(255,255,255)
-    blue=(0,0,255)
+def roundline(srf, color, start, end, radius=1):
+    dx = end[0]-start[0]
+    dy = end[1]-start[1]
+    distance = max(abs(dx), abs(dy))
+    for i in range(distance):
+        x = int( start[0]+float(i)/distance*dx)
+        y = int( start[1]+float(i)/distance*dy)
+        pygame.draw.circle(srf, color, (x, y), radius)
 
-    DISPLAY.fill(WHITE)
-
-    pygame.draw.rect(DISPLAY,blue,(200,150,100,50))
-
+try:
     while True:
-        for event in pygame.event.get():
-            if event.type==QUIT:
-                pygame.quit()
-                sys.exit()
-        pygame.display.update()
+        e = pygame.event.wait()
+        if e.type == pygame.QUIT:
+            raise StopIteration
+        if e.type == pygame.MOUSEBUTTONDOWN:
+            color = (random.randrange(256), random.randrange(256), random.randrange(256))
+            pygame.draw.circle(screen, color, e.pos, radius)
+            draw_on = True
+        if e.type == pygame.MOUSEBUTTONUP:
+            draw_on = False
+        if e.type == pygame.MOUSEMOTION:
+            if draw_on:
+                pygame.draw.circle(screen, color, e.pos, radius)
+                roundline(screen, color, e.pos, last_pos,  radius)
+            last_pos = e.pos
+        pygame.display.flip()
 
-main()
+except StopIteration:
+    pass
+
+pygame.quit()
