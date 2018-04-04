@@ -10,23 +10,21 @@ def recv():
     global sock
     global data
 
-    t = threading.currentThread()
     while True:
         try:
-            item = q.get(False)
+            item = q.get()
             if item == 'stop':
-                print("Here")
                 break
         except:
             pass
 
         data, server = sock.recvfrom(4096)
 
-def stop():
+def stop_recv_thread():
     global q
     q.put('stop')
 
-def roundline(srf, color, start, end, radius=1):
+def roundline(srf, color, start, end, radius=0.5):
     dx = end[0]-start[0]
     dy = end[1]-start[1]
     distance = max(abs(dx), abs(dy))
@@ -59,14 +57,12 @@ def main():
     screen.fill((255, 255, 255))
 
     recv_thread = threading.Thread(target=recv, args=())
-    recv_thread.daemon = True
     recv_thread.start()
 
     try:
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    stop()
                     raise StopIteration
 
             pos = data
@@ -80,7 +76,7 @@ def main():
             pygame.display.update()
 
     except StopIteration:
-        pass
+        stop_recv_thread()
 
     pygame.quit()
 
