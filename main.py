@@ -30,6 +30,7 @@ try:
         if e.type == pygame.MOUSEBUTTONDOWN:
             color = (random.randrange(256), random.randrange(256), random.randrange(256))
             pygame.draw.circle(screen, color, e.pos, radius)
+            sock.sendto(pickle.dumps((e.pos, last_pos)), server_address)
             draw_on = True
         if e.type == pygame.MOUSEBUTTONUP:
             draw_on = False
