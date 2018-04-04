@@ -1,10 +1,10 @@
 #socket_echo_server_dgram.py
-import socket
+from socket import *
 import sys
 import pickle
 
 class player:
-    def __init__(self, name, socket, UDPport)
+    def __init__(self, name, socket, UDPport):
         self.score = 0
         self.pos = None
         self.isDrawing = False
@@ -14,29 +14,35 @@ class player:
 
 class server:
     def __init__(self):
-        self.UDPsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self. TCPsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.UDPsock = socket(AF_INET, SOCK_DGRAM)
+        self.TCPsock = socket(AF_INET, SOCK_STREAM)
+        self.TCPsock.setsockopt(SOL_SOCKET, SO_REUSEADDR,1)
         self.server_address = "localhost"
         self.UDPport = 10000
         self.TCPport = 11000
+
+        self.players_list = []
 
     def start(self):
         # bind UDP socket
         self.UDPsock.bind((self.server_address, self.UDPport))
         # bind TCP socket
         self.TCPsock.bind((self.server_address, self.TCPport))
-        # accept connections on the TCP socket.
-        self.TCPsock.accept(1)
+        self.TCPsock.listen(1)
+        
         while True:
-            client_TCPSocket, client_address = TCPsock.accept()
+            client_TCPSocket, client_address = self.TCPsock.accept()
             # players name is the amount of players + 1, players UDP port is 
             # is the amount of players plus 10001
-            player = player("player" + len(players_list) + 1, client_TCPSocket, 
-                            len(players_list + 10001))
-            self.players_list.append(player)
+            player1 = player("player" + str(len(self.players_list) + 1), client_TCPSocket, 
+                            len(self.players_list) + 10001)
+            self.players_list.append(player1)
             # send the UDP port to the client
-            player.socket.sendall((player.UDPport + "").encode())
+            player1.TCPsock.sendall(pickle.dumps(("UDPport", player1.UDPport)))
 
+if __name__ == "__main__":
+    server = server()
+    server.start()
 
 # # Create a UDP socket
 # sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

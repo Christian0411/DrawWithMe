@@ -6,9 +6,10 @@ import pygame, random
 import socket
 import pickle
 from threading import Thread
+import queue
 class client: 
     def __init__(self):
-        self.q = None
+        self.q = queue.Queue()
         self.UDPsock = None
         self.UDPdata = None
 
@@ -32,6 +33,7 @@ class client:
 
             self.UDPdata, server = self.UDPsock.recvfrom(4096)
     def TCPrecv(self):
+        self.TCPsock.connect(self.server_address)
         while True:
             try:
                 item = self.q.get()
@@ -39,9 +41,23 @@ class client:
                     break
             except:
                 pass
-            self.TCPdata, server = self.TCPsock.recvfrom(4096)
+            TCPdata, server = self.TCPsock.recvfrom(4096)
+            if TCPdata != "": 
+                self.handle_tcp_data(TCPdata)
 
 
+    def handle_tcp_data(self, TCPdata):
+        try:
+            data_tuple = pickle.loads(TCPdata)
+            if data_tuple[0] == "UDPport":
+                self.start_UDP(data_tuple[1])
+        except:
+            pass
+
+    def start_UDP(self, port):
+        self.UDPsock.bind(("localhost", port))
+        self.UDPrecv_thread.start()
+        
     def stop_recv_thread(self):
         self.q.put('stop')
 
@@ -58,11 +74,12 @@ class client:
         # Create TCP socket
         self.TCPsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
-        self.server_address = ('localhost', 10000)
+        self.server_address = ('localhost', 11000)
         
         # start the tcp receive thread
-        TCPrecv_thread = Thread(target=self.TCPrecv, args=())
-        TCPrecv_thread.start()
+        self.TCPrecv_thread = Thread(target=self.TCPrecv, args=())
+        self.UDPrecv_thread = Thread(target=self.UDPrecv, args=())
+        self.TCPrecv_thread.start()
 
         try:
             while True:
@@ -84,7 +101,7 @@ class client:
                     last_pos = e.pos
                 pygame.display.flip()
         except StopIteration:
-            pass
+            self.stop_recv_thread()
 
         pygame.quit()
 
