@@ -12,6 +12,7 @@ class client:
         self.q = queue.Queue()
         self.UDPsock = None
         self.UDPdata = None
+        self.UDP_address = None
 
     def roundline(self, srf, color, start, end, radius=1):
         dx = end[0]-start[0]
@@ -24,37 +25,31 @@ class client:
 
     def UDPrecv(self):
         while True:
-            try:
-                item = self.q.get()
-                if item == 'stop':
-                    break
-            except:
-                pass
-
             self.UDPdata, server = self.UDPsock.recvfrom(4096)
-    def TCPrecv(self):
-        self.TCPsock.connect(self.server_address)
-        while True:
             try:
-                item = self.q.get()
-                if item == 'stop':
-                    break
+                self.UDPdata = pickle.loads(self.UDPdata)
+                print(self.UDPdata)
             except:
                 pass
-            TCPdata, server = self.TCPsock.recvfrom(4096)
+    def TCPrecv(self):
+        while True:
+            print("asdf")
+            TCPdata = self.TCPsock.recv(4096)
             if TCPdata != "": 
                 self.handle_tcp_data(TCPdata)
 
 
-    def handle_tcp_data(self, TCPdata):
+    def handle_tcp_data(self,data_tuple):
         try:
-            data_tuple = pickle.loads(TCPdata)
+            data_tuple = pickle.loads(data_tuple)
             if data_tuple[0] == "UDPport":
                 self.start_UDP(data_tuple[1])
         except:
             pass
 
     def start_UDP(self, port):
+        print(port)
+        self.UDP_address = ("localhost", port)
         self.UDPsock.bind(("localhost", port))
         self.UDPrecv_thread.start()
         
@@ -74,31 +69,47 @@ class client:
         # Create TCP socket
         self.TCPsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
-        self.server_address = ('localhost', 11000)
         
+        self.server_address = ('localhost', 11000)
+        self.TCPsock.connect(self.server_address)
         # start the tcp receive thread
         self.TCPrecv_thread = Thread(target=self.TCPrecv, args=())
+        self.TCPrecv_thread.daemon = True
         self.UDPrecv_thread = Thread(target=self.UDPrecv, args=())
+        self.UDPrecv_thread.daemon = True
         self.TCPrecv_thread.start()
 
         try:
             while True:
-                
-                e = pygame.event.wait()
-                if e.type == pygame.QUIT:
-                    raise StopIteration
-                if e.type == pygame.MOUSEBUTTONDOWN:
-                    pygame.draw.circle(screen, color, e.pos, radius)
-                    self.UDPsock.sendto(pickle.dumps((e.pos, last_pos, color)), self.server_address)
-                    draw_on = True
-                if e.type == pygame.MOUSEBUTTONUP:
-                    draw_on = False
-                if e.type == pygame.MOUSEMOTION:
-                    if draw_on:
+
+                for e in  pygame.event.get():
+                    if e.type == pygame.QUIT:
+                        raise StopIteration
+                    if e.type == pygame.MOUSEBUTTONDOWN:
                         pygame.draw.circle(screen, color, e.pos, radius)
-                        self.roundline(screen, color, e.pos, last_pos,  radius)
-                        self.UDPsock.sendto(pickle.dumps((e.pos, last_pos, color)), self.server_address)
-                    last_pos = e.pos
+                        try:
+                            self.UDPsock.sendto(pickle.dumps((e.pos, last_pos, color)), self.UDP_address)
+                        except:
+                            pass
+                        draw_on = True
+                    if e.type == pygame.MOUSEBUTTONUP:
+                        draw_on = False
+                    if e.type == pygame.MOUSEMOTION:
+                        if draw_on:
+                            pygame.draw.circle(screen, color, e.pos, radius)
+                            self.roundline(screen, color, e.pos, last_pos,  radius)
+                            try:
+                                print(self.UDP_address)
+                                self.UDPsock.sendto(pickle.dumps((e.pos, last_pos, color)), ("localhost", 10000))
+                            except Exception as b:
+                                print(b)
+                        last_pos = e.pos
+                try:
+                    pos, last_pos, color = self.UDPdata[1]
+                    pygame.draw.circle(screen, color, pos, radius)
+                    self.roundline(screen, color, pos, last_pos,  radius)
+                except:
+                    pass
                 pygame.display.flip()
         except StopIteration:
             self.stop_recv_thread()
