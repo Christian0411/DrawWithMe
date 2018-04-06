@@ -45,10 +45,15 @@ class server:
             #self.p_thread = Thread(target=self.handle_player, args=(player1,))
             # send the UDP port to the client
             player1.TCPsock.sendall(pickle.dumps(("UDPport", player1.UDPport)))
+            if len(self.players_list) >= 2:
+                self.game_start()
+
+    def game_start(self):
+        self.players_list[0].TCPsock.sendall(pickle.dumps(("makeDrawer", True)))
     def handle_player(self, player):
         while True:
             pass
-    
+
     def recv_udp(self):
         print("Here")
         while True:
