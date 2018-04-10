@@ -41,8 +41,11 @@ class server:
             # is the amount of players plus 10001
             player1 = player("player" + str(len(self.players_list) + 1),
                              client_TCPSocket, len(self.players_list) + 10001, client_address[0])
+            for p1 in self.players_list:
+                p1.TCPsock.sendall(pickle.dumps(("newPlayer", player1.name + "      " + str(p1.score), player1.score)))
             self.players_list.append(player1)
-            #self.p_thread = Thread(target=self.handle_player, args=(player1,))
+            self.p_thread = Thread(target=self.handle_player, args=(player1,))
+            self.p_thread.start()
             # send the UDP port to the client
             player1.TCPsock.sendall(pickle.dumps(("UDPport", player1.UDPport)))
             if len(self.players_list) >= 2:
@@ -51,9 +54,9 @@ class server:
     def game_start(self):
         self.players_list[0].TCPsock.sendall(pickle.dumps(("makeDrawer", True)))
     def handle_player(self, player):
+        player.TCPsock.sendall(pickle.dumps(("updatePlayerList", [x.name + "     " + str(x.score)  for x in self.players_list])))
         while True:
             pass
-
     def recv_udp(self):
         print("Here")
         while True:
@@ -62,6 +65,10 @@ class server:
             for player in self.players_list:
                 if player.UDPport != address[1]:
                     self.UDPsock.sendto(pickle.dumps(("Draw",data)), (player.address, player.UDPport))
+                    self.UDPsock.sendto(pickle.dumps(("Draw",data)), (player.address, player.UDPport))
+                    self.UDPsock.sendto(pickle.dumps(("Draw",data)), (player.address, player.UDPport))
+
+
 
 if __name__ == "__main__":
     server = server()

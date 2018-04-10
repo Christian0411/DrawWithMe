@@ -16,6 +16,10 @@ class client:
         self.UDPdata = None
         self.UDP_address = None
         self.isDrawer = False
+        self.playersCount = 0
+        self.players_list = []
+        self.playeroffset = 10
+        self.UDPdatalist = []
 
     def roundline(self, srf, color, start, end, radius=1):
         dx = end[0]-start[0]
@@ -28,16 +32,16 @@ class client:
 
     def UDPrecv(self):
         while True:
-            self.UDPdata, server = self.UDPsock.recvfrom(4096)
+            self.UDPdata, server = self.UDPsock.recvfrom(8126)
             try:
                 self.UDPdata = pickle.loads(self.UDPdata)
-                print(self.UDPdata)
+                if self.UDPdata not in self.UDPdatalist:
+                    self.UDPdatalist.append(self.UDPdata)
             except:
                 pass
     def TCPrecv(self):
         while True:
-            print("asdf")
-            TCPdata = self.TCPsock.recv(4096)
+            TCPdata = self.TCPsock.recv(8126)
             if TCPdata != "": 
                 self.handle_tcp_data(TCPdata)
 
@@ -49,12 +53,17 @@ class client:
                 self.start_UDP(data_tuple[1])
             if data_tuple[0] == "makeDrawer":
                 self.isDrawer = data_tuple[1]
-
+            if data_tuple[0] == "updatePlayerList":
+                for player in data_tuple[1]:
+                    self.playeroffset = self.playeroffset + 20
+                    self.players_list.append((player, self.playeroffset))
+            if data_tuple[0] == "newPlayer":
+                self.playeroffset = self.playeroffset + 20
+                self.players_list.append((data_tuple[1], self.playeroffset))
         except:
             pass
 
     def start_UDP(self, port):
-        print(port)
         self.UDP_address = ("localhost", port)
         self.UDPsock.bind(("localhost", port))
         self.UDPrecv_thread.start()
@@ -70,7 +79,11 @@ class client:
 
         screen = pygame.display.set_mode((800,600))
 
-
+        pygame.font.init() # you have to call this at the start, 
+                   # if you want to use this module.
+        self.myfont = pygame.font.SysFont('Arial', 15)
+        textsurface = self.myfont.render('Enter guess:', True, (0, 0, 0))
+        scoreboardtext = self.myfont.render('Scoreboard', True, (255, 255, 255))
         screen.fill((255, 255, 255))
         # Create a UDP socket
         self.UDPsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -90,26 +103,32 @@ class client:
         
         clock = pygame.time.Clock()
         # this surface represents the are the chat is in
-        chat_bar_surface = pygame.Surface((800,20))
+        chat_bar_surface = pygame.Surface((649,20))
         # fill the surface with a color
         chat_bar_surface.fill((96,106,117))
+
+        score_board_surface = pygame.Surface((150, 600))
+        score_board_surface.fill((96,106,117))
+
 
         try:
             while True:
                 events = pygame.event.get()
                 # If enter has been pressed
                 if self.chatinput.update(events):
-                    print(self.chatinput.get_text())
                     self.chatinput.clear_text()
                 
                 # Draw the input onto the chat area surface
-                chat_bar_surface.blit(self.chatinput.get_surface(), (0, 3))
+                chat_bar_surface.blit(self.chatinput.get_surface(), (3, 3))
                 # Draw the chat area surface onto the screen
                 screen.blit(chat_bar_surface, (0,580))
+                screen.blit(score_board_surface, (650, 0))
+                screen.blit(scoreboardtext, (682, 5))
+                self.update_scoreboard(screen)
                 # Refresh the chat area
                 chat_bar_surface.fill((96,106,117))
                
-
+                screen.blit(textsurface,(3,560))
                 for e in events:
                     if e.type == pygame.QUIT:
                         raise StopIteration
@@ -133,9 +152,10 @@ class client:
                         last_pos = e.pos
                 if not self.isDrawer:
                     try:
-                        pos, last_pos, color = self.UDPdata[1]
-                        pygame.draw.circle(screen, color, pos, radius)
-                        self.roundline(screen, color, pos, last_pos,  radius)
+                        if self.UDPdata in self.UDPdatalist:
+                            pos, last_pos, color = self.UDPdata[1]
+                            pygame.draw.circle(screen, color, pos, radius)
+                            self.roundline(screen, color, pos, last_pos,  radius)
                     except:
                         pass
 
@@ -144,9 +164,14 @@ class client:
         except StopIteration:
             self.stop_recv_thread()
 
+       
         pygame.quit()
+    def update_scoreboard(self, screen):
+        for player in self.players_list:
 
-        
+            playername = self.myfont.render(player[0],True, (255, 255, 255))
+            screen.blit(playername, (660, player[1]))
+
 
 
 if __name__ == "__main__":

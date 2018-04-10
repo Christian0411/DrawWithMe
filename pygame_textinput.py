@@ -16,11 +16,11 @@ class TextInput:
     This class let's the user input a short, one-lines piece of text at a blinking cursor
     that can be moved using the arrow-keys. Delete, home and end work as well.
     """
-    def __init__(self, font_family = "",
+    def __init__(self, font_family = pygame.font.get_default_font(),
                         font_size = 25,
                         antialias=True,
-                        text_color=(0, 0, 0),
-                        cursor_color=(0, 0, 1),
+                        text_color=(255, 255, 255),
+                        cursor_color=(255, 255, 254),
                         repeat_keys_initial_ms=400,
                         repeat_keys_interval_ms=35):
         """
