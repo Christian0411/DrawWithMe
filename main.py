@@ -42,14 +42,8 @@ class client:
                 pass
     def TCPrecv(self):
         while True:
-<<<<<<< Updated upstream
             TCPdata = self.TCPsock.recv(8126)
-            if TCPdata != "": 
-=======
-            print("asdf")
-            TCPdata = self.TCPsock.recv(4096)
             if TCPdata != "":
->>>>>>> Stashed changes
                 self.handle_tcp_data(TCPdata)
 
 
@@ -86,7 +80,7 @@ class client:
 
         screen = pygame.display.set_mode((800,600))
 
-        pygame.font.init() # you have to call this at the start, 
+        pygame.font.init() # you have to call this at the start,
                    # if you want to use this module.
         self.myfont = pygame.font.SysFont('Arial', 15)
         textsurface = self.myfont.render('Enter guess:', True, (0, 0, 0))
@@ -134,13 +128,9 @@ class client:
                 self.update_scoreboard(screen)
                 # Refresh the chat area
                 chat_bar_surface.fill((96,106,117))
-<<<<<<< Updated upstream
-               
+
                 screen.blit(textsurface,(3,560))
-=======
 
-
->>>>>>> Stashed changes
                 for e in events:
                     if e.type == pygame.QUIT:
                         raise StopIteration
@@ -176,18 +166,13 @@ class client:
         except StopIteration:
             self.stop_recv_thread()
 
-       
+
         pygame.quit()
     def update_scoreboard(self, screen):
         for player in self.players_list:
 
             playername = self.myfont.render(player[0],True, (255, 255, 255))
             screen.blit(playername, (660, player[1]))
-
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
 
 
 if __name__ == "__main__":
