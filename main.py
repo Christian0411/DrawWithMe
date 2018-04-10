@@ -8,8 +8,9 @@ import pickle
 from threading import Thread
 import queue
 import pygame_textinput
+pygame.init()
 
-class client: 
+class client:
     def __init__(self):
         self.q = queue.Queue()
         self.UDPsock = None
@@ -41,8 +42,14 @@ class client:
                 pass
     def TCPrecv(self):
         while True:
+<<<<<<< Updated upstream
             TCPdata = self.TCPsock.recv(8126)
             if TCPdata != "": 
+=======
+            print("asdf")
+            TCPdata = self.TCPsock.recv(4096)
+            if TCPdata != "":
+>>>>>>> Stashed changes
                 self.handle_tcp_data(TCPdata)
 
 
@@ -67,7 +74,7 @@ class client:
         self.UDP_address = ("localhost", port)
         self.UDPsock.bind(("localhost", port))
         self.UDPrecv_thread.start()
-        
+
     def stop_recv_thread(self):
         self.q.put('stop')
 
@@ -89,7 +96,7 @@ class client:
         self.UDPsock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # Create TCP socket
         self.TCPsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        
+
         self.chatinput = pygame_textinput.TextInput()
         self.server_address = ('localhost', 11000)
         self.TCPsock.connect(self.server_address)
@@ -100,7 +107,7 @@ class client:
         self.UDPrecv_thread.daemon = True
         self.TCPrecv_thread.start()
 
-        
+
         clock = pygame.time.Clock()
         # this surface represents the are the chat is in
         chat_bar_surface = pygame.Surface((649,20))
@@ -117,7 +124,7 @@ class client:
                 # If enter has been pressed
                 if self.chatinput.update(events):
                     self.chatinput.clear_text()
-                
+
                 # Draw the input onto the chat area surface
                 chat_bar_surface.blit(self.chatinput.get_surface(), (3, 3))
                 # Draw the chat area surface onto the screen
@@ -127,8 +134,13 @@ class client:
                 self.update_scoreboard(screen)
                 # Refresh the chat area
                 chat_bar_surface.fill((96,106,117))
+<<<<<<< Updated upstream
                
                 screen.blit(textsurface,(3,560))
+=======
+
+
+>>>>>>> Stashed changes
                 for e in events:
                     if e.type == pygame.QUIT:
                         raise StopIteration
@@ -172,6 +184,10 @@ class client:
             playername = self.myfont.render(player[0],True, (255, 255, 255))
             screen.blit(playername, (660, player[1]))
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 
 
 if __name__ == "__main__":

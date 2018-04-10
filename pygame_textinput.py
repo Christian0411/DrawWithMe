@@ -154,4 +154,4 @@ class TextInput:
         self.cursor_surface.fill(color)
 
     def clear_text(self):
-        self.input_string=""    
+        self.input_string=""
